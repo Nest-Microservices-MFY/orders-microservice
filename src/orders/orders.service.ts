@@ -13,15 +13,13 @@ import {
   CreateOrderDto,
   OrderPaginationDto,
 } from './dto';
-import { PRODUCT_SERVICE } from '../config';
+import { NATS_SERVICE } from '../config';
 
 @Injectable()
 export class OrdersService extends PrismaClient implements OnModuleInit {
   private readonly logger = new Logger(OrdersService.name);
 
-  constructor(
-    @Inject(PRODUCT_SERVICE) private readonly productsClient: ClientProxy,
-  ) {
+  constructor(@Inject(NATS_SERVICE) private readonly client: ClientProxy) {
     super();
   }
 
@@ -44,7 +42,7 @@ export class OrdersService extends PrismaClient implements OnModuleInit {
       // 1 Confirmar los ID de los productos
       const productIds = createOrderDto.items.map((item) => item.productId);
       const products: any[] = await firstValueFrom(
-        this.productsClient.send({ cmd: 'validate_products' }, productIds),
+        this.client.send({ cmd: 'validate_products' }, productIds),
       );
 
       // 2 Cálculo de valores
@@ -184,7 +182,7 @@ export class OrdersService extends PrismaClient implements OnModuleInit {
 
     const productsIds = order.OrderItem.map((orderItem) => orderItem.productId);
     const products: any[] = await firstValueFrom(
-      this.productsClient.send({ cmd: 'validate_products' }, productsIds),
+      this.client.send({ cmd: 'validate_products' }, productsIds),
     );
 
     return {
